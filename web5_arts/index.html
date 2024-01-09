@@ -1,0 +1,228 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+ <title>Web5 Digital Arts</title>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="" />
+
+
+<!-- Latest compiled and minified CSS -->
+  <script src="scripts/jquery.min.js"></script>
+
+  <script src="scripts/bootstrap.min.js"></script>
+<link type="text/css" rel="stylesheet" href="scripts/bootstrap.min.css">
+
+<link type="text/css" rel="stylesheet" href="css/store2.css">
+
+
+<script>
+// initialized session
+
+
+$(document).ready(async function(){
+var token = new Date().toLocaleString();
+sessionStorage.setItem('access_token_tok', token);
+
+
+    });
+	
+</script>
+
+<script>
+
+
+
+window.addEventListener('load', function(e) {
+    if (navigator.onLine) {
+$('#network_status').html("<br><br><div style='color:white;background:green;padding:10px;border:none;'>Your network status is Online </div>");
+
+    } else {
+$('#network_status').html("<br><br><div style='color:white;background:red;padding:10px;border:none;'>Your network status is Offline. Please Ensure You are Online to use this app... </div>");
+
+    }
+}, false);
+
+
+
+window.addEventListener('online', function(e) {
+$('#network_status').html("<br><br><div style='color:white;background:green;padding:10px;border:none;'>Your are back is Online </div>");
+
+}, false);
+            
+window.addEventListener('offline', function(e) {
+$('#network_status').html("<br><br><div style='color:white;background:red;padding:10px;border:none;'>Your Internet Connection is Down </div>");
+
+}, false);
+
+
+   </script>
+
+
+
+
+ 
+</head>
+<body>
+
+
+
+<!-- start column nav-->
+
+
+<div class="text-center">
+<nav class="navbar navbar-fixed-top">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navgator">
+        <span class="navbar-header-collapse-color icon-bar"></span>
+        <span class="navbar-header-collapse-color icon-bar"></span>
+        <span class="navbar-header-collapse-color icon-bar"></span> 
+        <span class="navbar-header-collapse-color icon-bar"></span>                       
+      </button>
+     <li class="navbar-brand home_click imagelogo_li_remove" ><img title='-logo' alt='-logo' class="img-rounded imagelogo_data" src="logo.png"></li>
+    </div>
+    <div class="collapse navbar-collapse" id="navgator">
+
+
+
+      <ul class="nav navbar-nav navbar-right">
+
+ <li style='display:none;' class="navgate_no">
+<a title='Apps Inspiration'  data-toggle="modal" data-target="#myModal_inspiration" style="color:white;font-size:14px;">
+<button class="category_post1">App Inspiration & What It Does</button></a></li>
+
+
+      </ul>
+
+
+    </div>
+  </div>
+
+
+
+</nav></div>
+
+<br /><br />
+
+<!-- end column nav-->
+
+<br /><br />
+
+
+
+
+
+
+<div class='row'>
+
+<center>
+<p class="home_content_head" style='color:black'>Web5 Digital Arts</p>
+
+
+
+<p  class="footer_text3">A Decentralized Social Network that allow artists and Micro Businesses to share and monetize their digital
+ content powered by <b>Web5JS and Paypal Payment Gateways.</b> </p><br>
+
+
+
+<a href="web5_artwork.html" class="category_post connect_btn" id="connect_btn" title='Connect DID'>Connect DID</a><br>
+
+
+  <h2 style='display:none' class="text-center"><span class="contact_name_color hh">Powered by. Web5</span></h2>
+
+</center>
+
+</div>
+
+
+
+
+
+
+
+<div class='row'>
+<div class='col-sm-2'></div>
+
+<div class='col-sm-8'> <div id='network_status'></div><br>
+<img style="width:100%;min-width:100%;max-width:100%;height:400px;" src="home2.png">
+
+
+</div>
+<div class='col-sm-2'></div>
+
+</div>
+
+<br><br>
+
+<!-- footer Section start -->
+
+<footer class=" navbar_footer text-center footer_bgcolor">
+
+<div class="row">
+
+        <div class="col-sm-12">
+
+<p class="footer_text1">Web5 Digital Arts</p>
+<p class="footer_text2">A Decentralized Social Network that allow artists to share and monetize their digital content powered by <b>Web5JS and Paypal Payment Gateways.</b></p>
+<br>
+
+
+
+        </div>
+
+ 
+</div>
+
+
+
+</div>
+
+<div class="footer_text1">
+<p class="footer_text1"></p>
+</div>
+
+
+<div class="footer_dashedline"></div>
+
+ </footer>
+
+<!-- footer Section ends -->
+
+
+
+
+
+
+
+
+
+
+   
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

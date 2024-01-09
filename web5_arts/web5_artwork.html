@@ -1,0 +1,2014 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+ 
+<title>Web5 Digital Arts</title>
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="keywords" content="" />
+  <script src="scripts/jquery.min.js"></script>
+
+  <script src="scripts/bootstrap.min.js"></script>
+<link type="text/css" rel="stylesheet" href="scripts/bootstrap.min.css">
+
+<link type="text/css" rel="stylesheet" href="css/store2.css">
+<script src="scripts/session.js"></script>
+<script src="scripts/moment.js"></script>
+	<script src="scripts/livestamp.js"></script>
+
+
+
+<style>
+.data_cssx{
+background:#ddd;
+padding:4px;
+//height:30px;
+border:none;
+color:black;
+border-radius:20%;
+font-size:16px;
+//text-align:center;
+width:250px;
+
+
+}
+
+
+.data_cssx:hover{
+background:orange;
+color:black;
+
+}
+
+</style>
+
+<script>
+
+window.addEventListener('load', function(e) {
+    if (navigator.onLine) {
+$('#network_status').html("<br><br><div style='color:white;background:green;padding:10px;border:none;'>Your network status is Online </div>");
+
+    } else {
+$('#network_status').html("<br><br><div style='color:white;background:red;padding:10px;border:none;'>Your network status is Offline. Please Ensure You are Online to use this app... </div>");
+
+    }
+}, false);
+
+
+
+window.addEventListener('online', function(e) {
+$('#network_status').html("<br><br><div style='color:white;background:green;padding:10px;border:none;'>Your are back is Online </div>");
+
+}, false);
+            
+window.addEventListener('offline', function(e) {
+$('#network_status').html("<br><br><div style='color:white;background:red;padding:10px;border:none;'>Your Internet Connection is Down </div>");
+
+}, false);
+
+
+   </script>
+
+
+<script  type="module">
+
+$(document).ready(async function(){
+$('.loader_init_did').fadeIn(400).html('<br><div style="color:black;background:#ddd;padding:10px;"><img src="ajax-loader.gif"> Please Wait! .Connecting DID.....</div>');
+ });
+
+
+
+import { Web5 } from 'https://cdn.jsdelivr.net/npm/@web5/api@0.8.3/dist/browser.mjs';
+ 
+ let web5;
+  let myDid;
+  let record;
+
+
+	  ({ web5, did: myDid } = await Web5.connect({
+      sync: "5s",
+    }));
+
+// check if browser.mjs has been loaded from cdn by initializing DID
+
+$(document).ready(async function(){
+
+if(myDid != ''){
+
+ const access_mydid = myDid;
+ const start = access_mydid.substring(0, 30);
+ const end = '...';
+ const mydidx =  start + end;
+ $('.myDid').html(mydidx);
+$('.myDid_value').val(mydidx).value;
+
+$('.myDid_did_value').val(myDid).value;
+
+
+$('.loader_init_did').hide();
+$('.result_init_did').html("<div style='color:white;background:green;padding:8px;border:none;'> DID Successfully Connected.....</div>");
+setTimeout(function(){ $('.result_init_did').html(''); }, 5000);
+}
+ });
+
+
+
+
+
+
+
+
+  
+// build protocol
+
+
+const protocolDefinition = {
+  "protocol": "https://social-media.xyz/web5arts/",
+  "published": true,
+  "types": {
+    "digitalarts": {
+      "schema": "https://social-media.xyz/schemas/digitalartsSchema",
+      "dataFormats": ["application/json"]
+    },
+    "artscomment": {
+      "schema": "https://social-media.xyz/schemas/artscommentSchema",
+      "dataFormats": ["application/json"]
+    }
+  },
+  "structure": {
+    "digitalarts": {
+      "$actions": [
+        {
+          "who": "anyone",
+          "can": "read"
+        },
+        {
+          "who": "anyone",
+          "can": "write"
+        }
+      ],
+      "artscomment": {
+        "$actions": [
+          {
+            "who": "author",
+            "of": "digitalarts",
+            "can": "write"
+          },
+          {
+            "who": "recipient",
+            "of": "digitalarts",
+            "can": "write"
+          }
+        ]
+      }
+    }
+  }
+};
+
+
+
+$(document).ready(async function(){
+// Create and configure Protocols
+$('#loader_create_protocols').fadeIn(400).html('<br><div style="color:black;background:#ddd;padding:10px;"><img src="ajax-loader.gif"> Please Wait! .Updating and Checking if Protocols has been created...</div>');
+
+  const { protocols, status } = await web5.dwn.protocols.query({
+    message: {
+      filter: {
+        protocol: protocolDefinition.protocol,
+      },
+    },
+  });
+  
+  //alert(status.code);
+  //alert(protocols.length);
+  console.log(protocols);
+
+  if (status.code !== 200) {
+    alert("Error querying protocols");
+    console.error("Error querying protocols", status);
+    return;
+  }
+
+  if (protocols.length > 0) {
+    console.log("Protocol already exist");
+	$('#loader_create_protocols').hide();
+	$('#result_create_protocols').html("<div style='color:white;background:green;padding:8px;border:none;'> Protocols Already Exist....</div>");
+setTimeout(function(){ $('#result_create_protocols').html(''); }, 5000);
+		
+    return;
+  }
+
+  // configure protocol on local DWN
+  const { status: configureStatus, protocol } =
+    await web5.dwn.protocols.configure({
+      message: {
+        definition: protocolDefinition,
+      },
+    });
+
+  console.log("Protocol configured", configureStatus, protocol);
+
+  // configure protocol on remote DWN
+  const { status: configureRemoteStatus } = protocol.send(myDid);
+  //console.log("Protocol configured on remote DWN", configureRemoteStatus);
+  
+  //configure protocol on remote DWN
+  //const { status} = protocol.send(myDid);
+  console.log("Status:", status);
+    console.log("Status code:", status.code);
+
+if(status.code ==200){
+$('#loader_create_protocols').hide();
+	$('#result_create_protocols').html("<div style='color:white;background:green;padding:8px;border:none;'> Protocols updated Successfully....</div>");
+setTimeout(function(){ $('#result_create_protocols').html(''); }, 5000);
+
+}
+
+});
+
+var schema_uri ="https://schema.org/profile_pal";
+
+$(document).ready(async function(){
+$('.update_btn').click(async function(){
+var fullname = $('#fullname').val();
+var phone_no = $('#phone_no').val();
+var email = $('#email').val();
+
+
+//preparing Email for validations
+   var atemail = email.indexOf("@");
+   var dotemail = email.lastIndexOf(".");
+
+
+
+ if(fullname==""){
+alert('Please Enter Fullname');
+//return false;   
+}
+else if(phone_no==""){
+alert('Please Enter Phone No.');
+//return false;   
+}
+else if(email==""){
+alert('Please Enter Email Address');
+//return false;   
+}
+else  if (atemail < 1 || ( dotemail - atemail < 2 )){
+alert("Please enter valid email Address")
+}
+
+
+else{
+
+$('#loader_update').fadeIn(400).html('<br><div style="color:black;background:#ddd;padding:10px;"><img src="ajax-loader.gif"> Please Wait! .Updating Profile...</div>');
+
+// check if user has already created profile
+  const { records } = await web5.dwn.records.query({
+    message: {
+      filter: {
+        schema: schema_uri,
+	dataFormat: 'application/json'
+      },
+      dateSort: "createdAscending",
+    },
+  });
+
+  console.log("Saved records", records.length);
+
+
+
+
+if(records.length >  0){
+$('#loader_update').html("<div style='color:white;background:red;padding:8px;border:none;'>Profile Already Created...</div>");
+setTimeout(function(){ $('#result_update').html(''); }, 5000);
+return false;
+}
+
+
+
+
+
+const messageData = {
+            fullname: fullname,
+	    phone_no: phone_no,
+            email: email
+        };
+
+        const { record, status } = await web5.dwn.records.create({
+            data: messageData,
+            message: {
+                schema: schema_uri,
+                dataFormat: "application/json"
+            },
+        });
+//alert(record.id);
+//alert(status.code);
+//alert(status.detail);
+
+//if(status.code==202){
+
+if(record.id != ''){
+$('#fullname').val('');
+$('#phone_no').val('');
+$('#email').val('');
+$('#loader_update').hide();
+$('#result_update').html("<div style='color:white;background:green;padding:8px;border:none;'>Profile Updated Successfully</div>");
+setTimeout(function(){ $('#result_update').html(''); }, 5000);
+location.reload();
+}else{
+
+
+$('#loader_update').hide();
+$('#result_update').html("<div style='color:white;background:red;padding:8px;border:none;'>Profile Updates Failed. Ensure There is Internet Connection</div>");
+setTimeout(function(){ $('#result_update').html(''); }, 5000);
+
+
+
+
+}
+
+
+
+}
+
+ });
+ });
+
+
+
+
+
+
+
+
+
+$(document).ready(async function(){
+$('#copy_btn').click(async function(){
+//$(document).on( 'click', '.copy_btn', async function(){ 
+
+  await navigator.clipboard.writeText(myDid);
+  alert("your DID copied to clipboard.  Please Paste and save it to a safe Place.");
+  //alert(myDid);
+});
+});
+
+
+
+
+$(document).ready(function(){
+$('.download_btn').click(function(){
+//$(document).on( 'click', '.download_btn', function(){ 
+
+         const link = document.createElement("a");
+         const data_to_save  =  myDid;
+         const file = new Blob([data_to_save], { type: 'text/plain' });
+         link.href = URL.createObjectURL(file);
+         link.download = "MyDID.txt";
+         link.click();
+         URL.revokeObjectURL(link.href);
+alert('DID Successfully Downloaded...');
+
+
+});
+
+});
+  
+
+// fetch profile info
+
+
+
+
+$(document).ready(async function(){
+// Fetch records
+$('#loader_rec').fadeIn(400).html('<br><div style="color:black;background:#ddd;padding:10px;"><img src="ajax-loader.gif"> Please Wait! .Fetching Users Profile Data...</div>');
+
+  const { records } = await web5.dwn.records.query({
+    message: {
+      filter: {
+        schema: schema_uri,
+	dataFormat: 'application/json'
+      },
+      dateSort: "createdAscending",
+    },
+  });
+
+  console.log("Saved records", records.length);
+console.log("records", records);
+
+
+
+if(records.length > 0){
+$('#loader_rec').hide();
+//$('#result_rec').html("<div style='color:white;background:green;padding:8px;border:none;'>Profile  Successfully Retrieved</div>");
+}else{
+
+$('#loader_rec').hide();
+$('#result_rec').html("<div style='color:white;background:red;padding:8px;border:none;'>Your Profile Data is Empty.Please Update...</div>");
+
+}
+
+
+for (let record of records) {
+  const rec = await record.data.json();
+  //console.log(rec.image);
+const fullname = rec.fullname;
+const phone_no = rec.phone_no;
+const email = rec.email;
+const record_id = record.id;
+const author = record.author;
+const target = record.target;
+
+var arr = fullname.split(" ");
+var first = arr[0];
+var second = arr[1];
+
+
+const xfirst = first.substring(0, 1);
+const xsecond = second.substring(0, 1);
+
+const image = xfirst + xsecond;
+
+//alert(image);
+
+
+
+
+
+$('#p_access_fullname').html(fullname);
+$('.author_fullname').val(fullname).value;
+$('.author_image').val(image).value;
+$('.author_email').val(email).value;
+
+
+/*
+  var tr_strx = "<span >" +
+  "<img src='" + image + "' class='img_circled' style='border-style: solid; border-width:3px; border-color:#800000;border-radius:50%;min-width:40px;max-width:40px;max-height:40px;min-height:40px' />" +
+"</span>";
+
+  var tr_strx = "<span >" +
+"<span style='color: #fff; display: block; max-width:40px;  border-radius: 45px; border: 3px solid #800000; background:fuchsia; padding: 16px 4px;font-size:20px;'>" + image + "</span>" +
+"</span>";
+
+
+*/
+
+  var tr_strx = "<span >" +
+"<span  style='color: #fff; display: block; max-width:80px;max-height:80px;  border-radius: 50%; border: 3px solid #800000; background:fuchsia; padding:10px;font-size:60'>" + image + "</span>" +
+"</span>";
+
+                $("#data_profile").append(tr_strx);
+
+
+//console.log(image);
+
+  var tr_str = "<div class='rec_" + record_id +" well row' >" +
+  //"<div class='col-sm-3'><img src='" + image + "' class='img_circled'  /></div>" +
+                    
+"<div class='col-sm-3' style='color: #fff; display: block; max-width:55px;  border-radius: 58px; border: 3px solid #800000; background:fuchsia; padding: 16px 4px;font-size:30px;'>" + image + "</div>" +
+
+"<div class='col-sm-9'><div><b>Fullname: </b>" + fullname + "</div>" +
+  "<div><b>Email: </b>" + email + "</div>" +
+  "<div><b>Phone-No: </b>" + phone_no + "</div>" +
+
+ "<div class='loader-delete_" + record_id +"'></div><div class='result-delete_" + record_id +"'></div>" +                   
+"<button id='del_btn' class='btn btn-danger del_btn btn-xs' title='Delete' data-id=" + record_id +" data-fullname=" + fullname +">Delete Profile</button></div>" +
+"</div>";
+
+                $("#data_result").append(tr_str);
+
+
+
+
+
+  };
+
+
+});
+
+
+
+
+
+
+
+
+
+
+
+// start deleting profile
+
+$(document).ready(async function(){
+$(document).on( 'click', '.del_btn', async function(){ 
+//$('.del_btn').click(async function(){
+
+var id = $(this).data('id');
+ if(confirm("Are you sure you want to Delete Your Profile: ")){
+
+$(".loader-delete_"+id).fadeIn(400).html('<br><div style="color:black;background:#ccc;padding:4px;"><img src="ajax-loader.gif">  &nbsp;Deleting..</div>');
+
+
+const deleteResult = await web5.dwn.records.delete({
+    message: {
+      recordId: id,
+    },
+  });
+
+console.log('res: ', deleteResult);
+console.log('res stat1: ', deleteResult.status.code);
+console.log('res stat2: ', deleteResult.status.detail);
+
+
+if(deleteResult.status.code == 202){
+$(".loader-delete_"+id).hide();
+$(".result-delete_"+id).html("<div style='color:white;background:green;padding:10px;border:none;'>Record Deleted....</div>");
+location.reload();
+//$(this).parents(".rec_"+id).animate({ backgroundColor: "#fbc7c7" }, "fast").animate({ opacity: "hide" }, "slow");
+
+}else{
+
+$(".loader-delete_"+id).hide();
+$(".result-delete_"+id).html("<div style='color:white;background:red;padding:10px;border:none;'>Record Could Not be Deleted....</div>");
+setTimeout(function(){ $(".loader-delete_"+id).html(''); }, 7000);
+return false;
+
+}
+
+
+
+
+
+}
+
+// confirm ends
+
+
+//}
+
+
+});
+});
+
+
+
+// End deleting profile
+
+
+
+
+
+
+
+
+// convert photo images to base64 starts
+
+$(document).ready(function(){
+   // const fileInput_photos = document.querySelector('input');
+ const fileInput_photos = document.querySelector('#photos_upload');
+
+
+    // Listen for the change event so we can capture the file
+    fileInput_photos.addEventListener('change', (e) => {
+
+
+var fname=  $('.file_content_photos').val();
+var ext = fname.split('.').pop();
+//alert(ext);
+
+
+// add double quotes around the variables
+var fileExtention_quotes = ext;
+fileExtention_quotes = "'"+fileExtention_quotes+"'";
+
+ var allowedtypes = ["png", "PNG", "gif", "GIF", "jpg", "JPG", "jpeg", "JPEG"];
+    if(allowedtypes.indexOf(ext) !== -1){
+//alert('Good this is a valid Image');
+}else{
+alert("Only Image Files are allowed");
+return false;
+    }
+
+    const fx = e.target.files;
+    const fileName = fx[0].name;
+    const file_size = fx[0].size;
+    const file_type = fx[0].type;
+
+// 1 kb is 1000 bytes
+
+if (file_size > 15 * 1000) { // allow file of less than 15 kb
+alert('For Testing Purposes, Files Larger than 15KB not allowed...');
+$('#loader_photosx').fadeIn(400).html("<br><div style='color:white;background:red;padding:10px;'></b>For Testing Purposes, We set Maximum photo Upload Size to <b>15kb</b> This is because <b>Web5js  via https://cdn.jsdelivr.net/npm/@web5/api@0.8.3/dist/browser.mjs</b> seems to have <b>some bugs.</b> We store uploaded images as <b>base64 Encoded String</b>. if we upload files from <b> 17kb, 23kb and above</b> and store it as <b>base64 String</b>,Only the Author/Sender can access it.  <br><br> when Recipient tries to query/access the file, it will throw errors  as follows <b>Access to fetch at https://dwn.tbddev.org/dwn2 from origin null has been blocked by CORS policy: No Access-Control-Allow-Origin header is present on the requested resource. If an opaque response serves your needs, set the requests mode to no-cors to fetch the resource with CORS disabled.</b><br><br> You can use any of the 4 sample photos above or below for testing. Thank You.<br><br> <ul><li><a style='color:white' target='_blank' href='artwork_photos_samples/artwork1.png'>Photo Sample 1</a><br></li><li><a  style='color:white' target='_blank' href='artwork_photos_samples/artwork2.png'>Photo Sample 2</a><br></li><li><a  style='color:white' target='_blank' href='artwork_photos_samples/artwork3.png'>Photo Sample 3</a><br></li><li><a  style='color:white' target='_blank' href='artwork_photos_samples/artwork4.png'>Photo Sample 4</a><br></li></ul></div>");
+
+return false;
+}
+
+
+    $('.file_name_photos').val(fileName).value;
+ $('.file_type_photos').val(file_type).value;
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onloadend = () => {
+        //console.log(reader.result);
+        //alert(reader.result);
+        $('.file_uploads_photos').val(reader.result).value;
+$('#loader_photosx').hide();
+
+        };
+        reader.readAsDataURL(file);
+    });
+});
+
+// convert pdf to base64 ends
+
+
+// upload photos starts
+
+
+$(document).ready(async function(){
+$('.photos_btn').click(async function(){
+
+var file_uploads_photos = $('.file_uploads_photos').val();
+var file_name_photos = $('.file_name_photos').val();
+var file_type_photos = $('.file_type_photos').val();
+var title = $('#title').val();
+var desc = $('#desc').val();
+var recipient_did  = $('#recipient_did').val();
+var price  = $('#price').val();
+
+var author_image  = $('.author_image').val();
+var author_fullname  = $('.author_fullname').val();
+var paypal_email  = $('.paypal_email').val();
+
+if(file_uploads_photos==""){
+alert('Please Upload Photos');
+return false;
+}
+
+
+
+
+if(author_image==""){
+alert('Please Ensure that you have updated Your Personal Profile Data');
+return false;
+}
+
+
+
+if(title==""){
+alert('Please Enter Products Photo Title');
+//return false;
+}
+
+else if(desc==""){
+alert('Please Enter Products Photo Description');
+//return false;   
+}
+
+
+else if(price==""){
+alert('Please Enter Products Photo Price');
+//return false;   
+}
+
+else if(paypal_email==""){
+alert('Please Enter Paypal email for recieving payments');
+//return false;   
+}
+
+
+
+else if(recipient_did==""){
+alert('Please Enter Recipient DID.');
+//return false;   
+}
+
+else{
+
+$('#loader_photos').fadeIn(400).html('<br><div style="color:black;background:#ddd;padding:10px;"><img src="ajax-loader.gif"> Please Wait! .Submiting Photos...</div>');
+
+var timeago = Math.floor(new Date().getTime() / 1000);
+var d_time = new Date().toLocaleString();
+
+
+var recipientDID = recipient_did;
+//alert(recipientDID);
+  const contents = {
+    title: title,
+    desc: desc,
+    price: price,
+    paypal_email: paypal_email,
+    file_uploads: file_uploads_photos,
+    file_name: file_name_photos,
+    file_type: file_type_photos,
+    data_type: 'photos',
+    recipient_did: recipient_did,
+    author_did: myDid,
+    author_image: author_image,
+    author_fullname: author_fullname,
+    created_time: timeago
+    };
+
+  //alert(protocolDefinition.protocol);
+//alert(protocolDefinition.types.document.schema);
+
+
+
+  try {
+    const { record } = await web5.dwn.records.create({
+      data: contents,
+      message: {
+	recipient: recipientDID,
+    schema: 'https://social-media.xyz/schemas/digitalartsSchema',
+    dataFormat: 'application/json',
+    protocol: protocolDefinition.protocol,
+    protocolPath: 'digitalarts'
+      },
+    });
+    const { status: sendStatus } = await record.send(recipientDID);
+//alert(status.code);
+//alert(status.detail);
+
+const record_id = record.id;
+//alert(record_id);
+  
+    if (sendStatus.code !== 202) {
+      console.log("Data cannot be sent to recipient DID:" + sendStatus);
+$('#loader_photos').hide();
+$('#result_photos').html("<div style='color:white;background:red;padding:8px;border:none;'>Digital Contents cannot be sent to recipient DID</div>");
+setTimeout(function(){ $('#result_photos').html(''); }, 5000);
+
+      return;
+
+    } else {
+      console.log("Data sent to recipient DID");
+
+$('#loader_photos').hide();
+$('#result_photos').html("<div style='color:white;background:green;padding:8px;border:none;'>Digital Contents Successfully Sent to Recipient</div>");
+alert('Data Successfully Sent to Recipient');
+$('#title').val('');
+$('#desc').val('');
+$('#price').val('');
+$('#photos_upload').val('');
+$('#recipient_did').val('');
+$('#file_uploads_photos').val('');
+
+// hide modal
+ $('#myModal_photos').modal('hide');
+
+
+  var tr_strx = "<span >" +
+"<span  style='color: #fff; display: block; max-width:80px;max-height:80px;  border-radius: 50%; border: 3px solid #800000; background:fuchsia; padding:10px;font-size:60'><b style='font-size:40px'>" + author_image + "</b></span>" +
+"</span>";
+
+
+ const end = '...';
+const recipient_did_shortened = recipient_did.substring(0, 15) + end;
+
+
+       var tr_strrecord = "<div class='rec-photorecord_" + record_id +" well' >" +
+	   
+"<div>" + tr_strx + "</div>" +
+"<div><b> Owner: </b>" + author_fullname + "</div>" +
+                    "<div> <b  style='font:20px;color:#800000;'> Photo Title: " + title + "</b></div>" +
+"<div><b>Photo Description:</b> " + desc + "</div>" +
+"<div><b>Photo Name: </b> " + file_name_photos + "</div>" +
+
+"<div> <b>Photo: </b><img src='" + file_uploads_photos + "'  style='border-style: solid; border-width:3px; border-color:#ec5574;border-radius:5%;min-width:400px;max-width:400px;max-height:400px;min-height:400px' /></div><br>" +
+"<div><b>Price: </b> " + price + "(USD)</div>" +
+
+"<div><b>Recipient DID: </b> " + recipient_did_shortened + "</div>" +
+  "<div><b> Created Time: </b> <span data-livestamp='" + timeago + "'></span>  </div>" +
+
+
+ "<br><div class='row'>"+
+"<button class='btn btn-primary load_btn_docs btn-sm' title='Buy Now Via Paypal' data-price=\""+ price +"\" data-paypal_email=\""+ paypal_email +"\"   data-id=" + record_id +"  data-title=\""+ title +"\" data-desc=\""+ desc +"\" data-file_uploads_docs=\""+ file_uploads_photos +"\" data-file_name_docs=\""+ file_name_photos +"\" data-recipient_did=\""+ recipient_did +"\" data-recipient_did_shortened=\""+ recipient_did_shortened +"\" data-author_did=\""+ myDid +"\" data-author_image=\""+ author_image +"\" data-author_fullname=\""+ author_fullname +"\" data-created_time=\""+ timeago +"\" data-toggle='modal' data-target='#myModal_paypal'>Buy Now Via Paypal ('" + price + " ' USD) </button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" +
+
+"<button id='download_btn_photo' class='btn btn-success download_btn_photo btn-sm' title='Download Photos' data-id=" + record_id +" data-file_uploads=\""+ file_uploads_photos +"\" data-file_name=\""+ file_name_photos +"\"  >Download Photo Sample</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" +
+"<button class='btn btn-warning load_btn_docs btn-sm comment_fetch_btn' title='Comment on Photos'  data-id=" + record_id +"  data-title=\""+ title +"\" data-desc=\""+ desc +"\" data-file_uploads_docs=\""+ file_uploads_photos +"\" data-file_name_docs=\""+ file_name_photos +"\" data-recipient_did=\""+ recipient_did +"\" data-recipient_did_shortened=\""+ recipient_did_shortened +"\" data-author_did=\""+ myDid +"\" data-author_image=\""+ author_image +"\" data-author_fullname=\""+ author_fullname +"\" data-created_time=\""+ timeago +"\" data-toggle='modal' data-target='#myModal_comment'>Comment & Discuss </button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" +
+ "<span class='loader-delete-photox_" + record_id +"'></span><sapn class='result-delete-photox_" + record_id +"'></span>" +  
+"<button id='del_btn_photox' class='btn btn-danger del_btn_photox btn-sm' title='Delete' data-id=" + record_id +" data-author_did=\""+ myDid +"\"  >Delete Photos</button>" +
+
+"</div>" +
+
+"</div>";
+
+                $("#data_result_photorecord").append(tr_strrecord);
+
+
+
+setTimeout(function(){ $('#result_photos').html(''); }, 5000);
+//location.reload();
+    }
+	
+	
+  } catch (e) {
+    console.error(e);
+    return;
+  }
+
+
+}
+
+ });
+ });
+ 
+// upload photos ends
+
+
+
+
+
+// fetch Photos lists starts
+
+//	dataFormat: 'application/json'
+
+$(document).ready(async function(){
+
+$('#loader_ph').fadeIn(400).html('<br><div style="color:black;background:#ddd;padding:10px;"><img src="ajax-loader.gif"> Please Wait! .Loading Photos Lists...</div>');
+
+
+const { records } = await web5.dwn.records.query({
+    message: {
+      filter: {
+ schema: 'https://social-media.xyz/schemas/digitalartsSchema',
+      }
+    },
+  });
+
+
+console.log("total  Saved recordsx", records.length);
+console.log("total  Saved recordsx", records);
+
+
+if(records.length > 0){
+$('#loader_ph').hide();
+$('#result_ph').html("<div style='color:white;background:green;padding:8px;border:none;'>Photos Album  Successfully Retrieved</div>");
+setTimeout(function(){ $('#result_ph').html(''); }, 15000);
+}else{
+
+$('#loader_ph').hide();
+$('#result_ph').html("<div style='color:white;background:red;padding:8px;border:none;'>Your Album List  is Empty...</div>");
+
+}
+
+
+for (let record of records) {
+  const recordx = await record.data.json();
+
+
+const title = recordx.title;
+const desc = recordx.desc;
+const file_uploads = recordx.file_uploads;
+const file_name = recordx.file_name;
+const file_type = recordx.file_type;
+const data_type = recordx.data_type;
+const recipient_did = recordx.recipient_did;
+const author_did = recordx.author_did;
+const author_image = recordx.author_image;
+const author_fullname = recordx.author_fullname;
+const created_time = recordx.created_time;
+const price = recordx.price;
+const paypal_email = recordx.paypal_email;
+
+
+ const end = '...';
+const recipient_did_shortened = recordx.recipient_did.substring(0, 15) + end;
+
+const record_id_docs = record.id;
+const record_id = record.id;
+const author = record.author;
+const target = record.target;
+
+var record_timeago = "<span>" +
+"<span data-livestamp='" + created_time + "'></span>" +
+ "</span>";
+$('#docs_timeago').html(record_timeago);
+
+var record_image = "<span>" +
+"<img src='" + author_image + "'  style='border-style: solid; border-width:3px; border-color:#ec5574;border-radius:50%;min-width:100px;max-width:100px;max-height:100px;min-height:100px'/>" +
+ "</span>";
+$('#docs_image').html(record_image);
+
+
+  var tr_strx = "<span >" +
+"<span  style='color: #fff; display: block; max-width:80px;max-height:80px;  border-radius: 50%; border: 3px solid #800000; background:fuchsia; padding:10px;font-size:60'><b style='font-size:40px'>" + author_image + "</b></span>" +
+"</span>";
+
+
+
+       var tr_strrecord = "<div class='rec-photorecord_" + record_id +" well' >" +
+	   
+"<div>" + tr_strx + "</div>" +
+"<div><b> Owner: </b>" + author_fullname + "</div>" +
+                    "<div> <b  style='font:20px;color:#800000;'> Photo Title: " + title + "</b></div>" +
+"<div><b>Photo Description:</b> " + desc + "</div>" +
+"<div><b>Photo Name: </b> " + file_name + "</div>" +
+
+"<div> <b>Photo: </b><img src='" + file_uploads + "'  style='border-style: solid; border-width:3px; border-color:#ec5574;border-radius:5%;min-width:400px;max-width:400px;max-height:400px;min-height:400px' /></div><br>" +
+
+"<div><b>Price: </b> " + price + "(USD)</div>" +
+"<div><b>Recipient DID: </b> " + recipient_did_shortened + "</div>" +
+  "<div><b> Created Time: </b> <span data-livestamp='" + created_time + "'></span>  </div>" +
+
+
+ "<br><div class='row'>"+
+"<button class='btn btn-primary load_btn_docs btn-sm' title='Buy Now Via Paypal' data-price=\""+ price +"\" data-paypal_email=\""+ paypal_email +"\"  data-id=" + record_id +"  data-title=\""+ title +"\" data-desc=\""+ desc +"\" data-file_uploads_docs=\""+ file_uploads +"\" data-file_name_docs=\""+ file_name +"\" data-recipient_did=\""+ recipient_did +"\" data-recipient_did_shortened=\""+ recipient_did_shortened +"\" data-author_did=\""+ author_did +"\" data-author_image=\""+ author_image +"\" data-author_fullname=\""+ author_fullname +"\" data-created_time=\""+ created_time +"\" data-toggle='modal' data-target='#myModal_paypal'>Buy Now Via Paypal ( " + price + " USD) </button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" +
+
+"<button id='download_btn_photo' class='btn btn-success download_btn_photo btn-sm' title='Download Photos' data-price=\""+ price +"\" data-paypal_email=\""+ paypal_email +"\" data-id=" + record_id +" data-file_uploads=\""+ file_uploads +"\" data-file_name=\""+ file_name +"\"  >Download Photo Sample</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" +
+"<button class='btn btn-warning load_btn_docs btn-sm comment_fetch_btn' title='Comment on Photos' data-price=\""+ price +"\" data-paypal_email=\""+ paypal_email +"\"  data-id=" + record_id +"  data-title=\""+ title +"\" data-desc=\""+ desc +"\" data-file_uploads_docs=\""+ file_uploads +"\" data-file_name_docs=\""+ file_name +"\" data-recipient_did=\""+ recipient_did +"\" data-recipient_did_shortened=\""+ recipient_did_shortened +"\" data-author_did=\""+ author_did +"\" data-author_image=\""+ author_image +"\" data-author_fullname=\""+ author_fullname +"\" data-created_time=\""+ created_time +"\" data-toggle='modal' data-target='#myModal_comment'>Comment & Discuss</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" +
+ "<span class='loader-delete-photox_" + record_id +"'></span><sapn class='result-delete-photox_" + record_id +"'></span>" +  
+"<button id='del_btn_photox' class='btn btn-danger del_btn_photox btn-sm' title='Delete' data-price=\""+ price +"\" data-paypal_email=\""+ paypal_email +"\" data-id=" + record_id +" data-author_did=\""+ author_did +"\"  >Delete Photos</button>" +
+
+"</div>" +
+
+"</div>";
+
+                $("#data_result_photorecord").append(tr_strrecord);
+
+
+  };
+
+  
+});
+
+// Fetch photo list ends
+
+
+
+
+
+// start deleting photo lists
+
+$(document).ready(async function(){
+$(document).on( 'click', '.del_btn_photox', async function(){ 
+//$('.del_btn_photox').click(async function(){
+
+var id = $(this).data('id');
+var author_id = $(this).data('author_did');
+var myDid_did_value  = $('.myDid_did_value').val();
+//alert(id);
+//alert(author_id);
+//alert(myDid_did_value);
+
+/*
+if(myDid_did_value != author_id){
+alert('You Cannot Delete Documents Uploaded by Another User');
+return false;
+}
+*/
+
+ if(confirm("Are you sure you want to Delete this Photos: ")){
+
+$(".loader-delete-photox_"+id).fadeIn(400).html('<br><div style="color:black;background:#ccc;padding:4px;"><img src="ajax-loader.gif">  &nbsp;Deleting..</div>');
+
+
+const deleteResult = await web5.dwn.records.delete({
+    message: {
+      recordId: id,
+    },
+  });
+
+console.log('res: ', deleteResult);
+console.log('res stat1: ', deleteResult.status.code);
+console.log('res stat2: ', deleteResult.status.detail);
+
+
+if(deleteResult.status.code == 202){
+$(".loader-delete-photox_"+id).hide();
+$(".result-delete-photox_"+id).html("<div style='color:white;background:green;padding:10px;border:none;'>Record Deleted....</div>");
+location.reload();
+//$(this).parents(".rec-photorecord_"+id).animate({ backgroundColor: "#fbc7c7" }, "fast").animate({ opacity: "hide" }, "slow");
+
+}else{
+
+$(".loader-delete-photox_"+id).hide();
+$(".result-delete-photox_"+id).html("<div style='color:white;background:red;padding:10px;border:none;'>Record Could Not be Deleted....</div>");
+setTimeout(function(){ $(".loader-delete-photox_"+id).html(''); }, 7000);
+return false;
+
+}
+
+
+
+
+
+}
+
+// confirm ends
+
+
+//}
+
+
+});
+});
+
+
+
+// End deleting Photo list
+
+
+
+
+
+
+
+// load data in modal start
+
+$(document).ready(async function(){
+$(document).on( 'click', '.load_btn_docs', async function(){ 
+
+//$('.load_btn_docs').click(async function(){
+
+var id = $(this).data('id');
+
+var image = $(this).data('author_image');
+var title = $(this).data('title');
+var author_fullname = $(this).data('author_fullname');
+var file_name_docs = $(this).data('file_name_docs');
+var extracted_text = $(this).data('extracted_text');
+var created_timeago = $(this).data('created_time');
+var author_did= $(this).data('author_did');
+var recipient_did = $(this).data('recipient_did');
+var desc = $(this).data('desc');
+var docs_base64 = $(this).data('file_uploads_docs');
+var price = $(this).data('price');
+var paypal_email = $(this).data('paypal_email');
+
+(author_did);
+(recipient_did);
+
+//alert(docs_base64);
+
+var rec_image = "<span>" +
+"<img src='" + image + "'  style='border-style: solid; border-width:3px; border-color:#ec5574;border-radius:50%;min-width:100px;max-width:100px;max-height:100px;min-height:100px'/>" +
+ "</span>";
+
+
+
+var rec_art = "<span>" +
+"<img src='" + docs_base64 + "'  style='border-style: solid; border-width:3px; border-color:#ec5574;border-radius:5%;min-width:200px;max-width:200px;max-height:200px;min-height:200px'/>" +
+ "</span>";
+
+$('.rec_arts').html(rec_art);
+
+//shortened DID
+ const start1 = recipient_did.substring(0, 30);
+ const end1 = '...';
+ const recipient_did_short =  start1 + end1;
+
+ const start2 = author_did.substring(0, 30);
+ const end2 = '...';
+ const author_did_short =  start2 + end2;
+
+
+
+$('.p_title').html(title);
+$('.p_image').html(rec_image);
+$('.p_author_fullname').html(author_fullname);
+$('.p_file_name_docs').html(file_name_docs);
+$('.p_extracted_text').html(extracted_text);
+$('.p_created_timeago').html(created_timeago);
+$('.p_author_did').html(author_did_short);
+$('.p_recipient_did').html(recipient_did_short);
+$('.p_desc').html(desc);
+$('.p_docs_base64').html(docs_base64);
+
+$('.p_price').html(price);
+$('.p_price_value').val(price).value;
+$('.p_paypal_email_value').val(paypal_email).value;
+
+$('.docs_base64_value').val(docs_base64).value;
+$('.file_name_docs_value').val(file_name_docs).value;
+$('.extracted_text_value').val(extracted_text).value;
+$('.id_value').val(id).value;
+
+$('.stitle_value').val(title).value;
+$('.sdesc_value').val(desc).value;
+
+
+$('.a_value').val(author_did).value;
+$('.r_value').val(recipient_did).value;
+
+//alert(author_did);
+//alert(recipient_did);
+
+$('.p_item_value').val(title).value;
+
+
+
+
+var rec_timeago = "<span>" +
+"<span data-livestamp='" + created_timeago + "'></span>" +
+ "</span>";
+
+$('.p_timeago').html(rec_timeago);
+
+
+});
+});
+
+// Load Data in Modal End 
+
+
+
+
+
+
+
+// Download Uploaded photos Starts
+
+$(document).ready(function(){
+//$('#download_btn_photo').click(function (e) {
+$(document).on( 'click', '.download_btn_photo', async function(){
+
+var base64String=$(this).data('file_uploads');
+var file_name_photos = $(this).data('file_name');
+
+ const linkSource = base64String;
+  const downloadLink = document.createElement("a");
+  const fileName = file_name_photos;
+  downloadLink.href = linkSource;
+  downloadLink.download = fileName;
+  downloadLink.click();
+alert('Photos Downloaded Successfully. Please check your Browser or Your System Download Directory');
+});
+
+});
+
+
+
+
+// Download Uploaded Photos ends
+
+
+
+
+
+
+
+
+
+// start Adding comments
+
+$(document).ready(async function(){
+$('.comment_add_btn').click(async function(){
+//$(document).on( 'click', '.comment_add_btn', async function(){ 
+
+
+var comment_msg =  $('.comment_msg').val();
+var postRecord_id  = $('.id_value').val();
+var timeago = Math.floor(new Date().getTime() / 1000);
+var author_image  = $('.author_image').val();
+var author_fullname  = $('.author_fullname').val();
+var post_author_did = $('.a_value').val();
+var post_recipient_did = $('.r_value').val();
+
+
+//var commentRecipient = post_recipient_did;
+
+
+
+if(myDid !=post_author_did){
+var commentRecipient = post_author_did;
+//console.log("Recipient DID1:", commentRecipient);
+}
+
+
+if(myDid !=post_recipient_did){
+var commentRecipient = post_recipient_did;
+//console.log("Recipient DID2:", commentRecipient);
+}
+
+
+if(comment_msg ==''){
+alert('Comment Cannot be empty');
+return false;
+}
+
+
+if(author_image==""){
+alert('Please Ensure that you have updated Your Personal Profile Data');
+return false;
+}
+
+$(".loader_comment_add").fadeIn(400).html('<br><div style="color:black;background:#ccc;padding:4px;"><img src="ajax-loader.gif">  &nbsp;Please Wait Comments is being Submitted...</div><br>');
+
+const commentData = {
+    comment_msg: comment_msg,
+    postRecord_id: postRecord_id,
+    recipient_did: commentRecipient,
+    author_did: myDid,
+    author_image: author_image,
+    author_fullname: author_fullname,
+    created_time: timeago
+        };
+
+  const { record: commentRecord, status: createStatus } =
+    await web5.dwn.records.create({
+      data: commentData,
+      message: {
+       protocol: protocolDefinition.protocol,
+      protocolPath: 'digitalarts/artscomment',
+      parentId: postRecord_id,
+      contextId: postRecord_id,
+        schema: "https://social-media.xyz/schemas/artscommentSchema",
+        dataFormat: 'application/json'
+      },
+    });
+
+  const data = await commentRecord.data.json();
+  const comment = { commentRecord, data, id: commentRecord.id };
+  const { status: sendStatus } = await commentRecord.send(commentRecipient);
+
+  if (sendStatus.code !== 202) {
+$('.loader_comment_add').hide();
+$('.result_comment_add').html("<div style='color:white;background:red;padding:8px;border:none;'>Failure: Comment cannot be Sent to Recipient</div>");
+setTimeout(function(){ $('.result_comment_add').html(''); }, 5000);
+    return;
+  } else {
+$('.loader_comment_add').hide();
+$('.result_comment_add').html("<div style='color:white;background:green;padding:8px;border:none;'>Comment Sent to Recipient</div>");
+setTimeout(function(){ $('.result_comment_add').html(''); }, 5000);
+$('.comment_msg').val('');
+
+//alert(commentRecord.id);
+
+
+
+  var tr_com = "<span >" +
+"<span  style='color: #fff; display: block; max-width:60px;max-height:60px;  border-radius: 50%; border: 3px solid #800000; background:fuchsia; padding:10px;font-size:60'><b style='font-size:30px'>" + author_image + "</b></span>" +
+"</span>";
+
+
+var tr_comment_new = "<div class='rec-comment_" + commentRecord.id +" well row' >" +
+
+//"<div><img src='" + author_image + "' class='img_circled' style='border-style: solid; border-width:3px; border-color:#ec5574;border-radius:50%;min-width:40px;max-width:40px;max-height:40px;min-height:40px' /></div>" +
+                   
+
+
+"<div>" + tr_com + "</div>" +
+"<div><b>Fullname: </b>" + author_fullname + "</div>" +
+ "<div><b>Comment: </b>" + comment_msg + "</div>" +
+ "<div><span data-livestamp='" + timeago + "'></span>  </div>" +
+
+
+ "<div class='loader-delete-comment_" + commentRecord.id +"'></div><div class='result-delete-comment_" + commentRecord.id +"'></div>" +                   
+"<button id='del_btn_comment' class='btn btn-danger del_btn_comment btn-xs' title='Delete' data-id=" + commentRecord.id +" >Delete Comment</button></div>" +
+"</div>";
+
+                //$("#data_result_comment_new").append(tr_comment_new);
+                $("#data_result_comment").append(tr_comment_new);
+
+
+
+  }
+
+});
+});
+
+// End Adding comments
+
+
+
+
+
+
+
+// start fetching comments
+$(document).ready(async function(){
+//$('.comment_fetch_btn').click(async function(){
+$(document).on( 'click', '.comment_fetch_btn', async function(){ 
+
+//hide new comment div
+//$('#data_result_comment_new').hide();
+
+
+var id = $(this).data('id');
+$(".loader_comment_fetch").fadeIn(400).html('<br><div style="color:black;background:#ccc;padding:4px;"><img src="ajax-loader.gif">  &nbsp;Please Wait Fetching Comments.</div>');
+const postRecord_id = id;
+
+const { records } = await web5.dwn.records.query({
+    message: {
+        filter: {
+            parentId: postRecord_id
+        }
+    }
+});
+console.log("total comments", records.length);
+
+if(records.length > 0){
+$('.loader_comment_fetch').hide();
+$('.result_comment_fetch').html("<div style='color:white;background:green;padding:8px;border:none;'>Comment List  Successfully Retrieved</div>");
+setTimeout(function(){ $('.result_comment_fetch').html(''); }, 15000);
+}else{
+
+$('.loader_comment_fetch').hide();
+$('.result_comment_fetch').html("<div style='color:white;background:red;padding:8px;border:none;'>No Comment Added Yet...</div>");
+}
+
+for (let record of records) {
+const record_comment = await record.data.json();
+const author_fullname = record_comment.author_fullname;
+const author_image =    record_comment.author_image;
+const recipient_did =   record_comment.recipient_did;
+const author_did =      record_comment.author_did;
+const comment_msg =     record_comment.comment_msg;
+const postRecord_id =   record_comment.postRecord_id;
+const created_time =    record_comment.created_time;
+const record_id =       record.id;
+
+
+  var tr_com2 = "<span >" +
+"<span  style='color: #fff; display: block; max-width:60px;max-height:60px;  border-radius: 50%; border: 3px solid #800000; background:fuchsia; padding:10px;font-size:60'><b style='font-size:30px'>" + author_image + "</b></span>" +
+"</span>";
+
+var tr_comment = "<div class='rec-comment_" + record_id +" well row' >" +
+//"<div><img src='" + author_image + "' class='img_circled' style='border-style: solid; border-width:3px; border-color:#ec5574;border-radius:50%;min-width:40px;max-width:40px;max-height:40px;min-height:40px' /></div>" +
+
+"<div>" + tr_com2 + "</div>" +                   
+"<div><b>Fullname: </b>" + author_fullname + "</div>" +
+ "<div><b>Comment: </b>" + comment_msg + "</div>" +
+ "<div><span data-livestamp='" + created_time + "'></span>  </div>" +
+
+
+ "<div class='loader-delete-comment_" + record_id +"'></div><div class='result-delete-comment_" + record_id +"'></div>" +                   
+"<button id='del_btn_comment' class='btn btn-danger del_btn_comment btn-xs' title='Delete' data-id=" + record_id +" >Delete Comment</button></div>" +
+"</div>";
+
+                $("#data_result_comment").append(tr_comment);
+
+}
+
+});
+});
+
+// end fetching comments
+
+
+
+
+
+// start deleting comment
+
+$(document).ready(async function(){
+$(document).on( 'click', '.del_btn_comment', async function(){ 
+//$('.del_btn_comment').click(async function(){
+
+var id = $(this).data('id');
+
+
+ if(confirm("Are you sure you want to Delete this comment: ")){
+
+$(".loader-delete-comment_"+id).fadeIn(400).html('<br><div style="color:black;background:#ccc;padding:4px;"><img src="ajax-loader.gif">  &nbsp;Deleting comment..</div>');
+
+
+const deleteResult = await web5.dwn.records.delete({
+    message: {
+      recordId: id,
+    },
+  });
+
+console.log('res: ', deleteResult);
+console.log('res stat1: ', deleteResult.status.code);
+console.log('res stat2: ', deleteResult.status.detail);
+
+
+if(deleteResult.status.code == 202){
+$(".loader-delete-comment_"+id).hide();
+$(".result-delete-comment_"+id).html("<div style='color:white;background:green;padding:10px;border:none;'>Record Deleted....</div>");
+//location.reload();
+$(this).parents(".rec-comment_"+id).animate({ backgroundColor: "#fbc7c7" }, "fast").animate({ opacity: "hide" }, "slow");
+
+}else{
+
+$(".loader-delete-comment_"+id).hide();
+$(".result-delete-comment_"+id).html("<div style='color:white;background:red;padding:10px;border:none;'>Record Could Not be Deleted....</div>");
+setTimeout(function(){ $(".loader-delete-comment_"+id).html(''); }, 7000);
+return false;
+
+}
+
+
+
+
+
+}
+
+// confirm ends
+
+
+//}
+
+
+});
+});
+
+
+
+// End deleting comment
+
+
+
+
+
+
+
+
+
+
+
+
+$(document).ready(async function(){
+$('.refresh_btn').click(async function(){
+alert('Page is being Refreshed');
+location.reload();
+
+});
+});
+
+
+
+
+// clear Comment Modal div content on modal closef closed
+$(document).ready(function(){
+
+$("#myModal_comment").on("hidden.bs.modal", function(){
+    //$(".modal-body").html("");
+ $('.comment_hide_on_modal_close').empty(); 
+//$('#q').val(''); 
+});
+
+});
+
+
+</script>
+
+
+
+
+
+
+
+</head>
+<body>
+<!-- start column nav-->
+
+
+<div class="text-center">
+<nav class="navbar navbar-fixed-top">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navgator">
+        <span class="navbar-header-collapse-color icon-bar"></span>
+        <span class="navbar-header-collapse-color icon-bar"></span>
+        <span class="navbar-header-collapse-color icon-bar"></span> 
+        <span class="navbar-header-collapse-color icon-bar"></span>                       
+      </button>
+     <li class="navbar-brand home_click imagelogo_li_remove" ><img title='-logo' alt='-logo' class="img-rounded imagelogo_data" src="logo.png"></li>
+    </div>
+    <div class="collapse navbar-collapse" id="navgator">
+
+
+
+      <ul class="nav navbar-nav navbar-right">
+
+ <li style='' class="navgate_no">
+<span id='data_profile'></span>
+</li>
+ <li style='' class="navgate_no">
+<a  style="color:white;font-size:14px;">
+<span class="category_post1" id='p_access_fullname'></span></a>
+</li>
+
+
+
+ <li style='' class="navgate_no">
+<a title='Refresh Page'  style="color:white;font-size:14px;">
+<button class="category_post1 refresh_btn">Refresh Page</button></a></li>
+
+
+
+ <li style='' class="navgate_no">
+<a title='Logout' href='logout.html' style="color:white;font-size:14px;">
+<button class="category_post1">Logout</button></a></li>
+
+      </ul>
+
+
+    </div>
+  </div>
+
+
+
+</nav>
+ </div>
+
+<!-- end column nav-->
+
+
+
+
+
+
+<br />
+<br />
+
+
+
+
+<div>
+
+<div class='row'>
+
+
+<input  type='hidden' class='id_value' value=''>
+
+
+<input  type='hidden' class='docs_base64_value' value=''>
+<input  type='hidden' class='file_name_docs_value' value=''>
+<input  type='hidden' class='extracted_text_value' value=''>
+
+
+
+<input  type='hidden' class='author_image' value=''>
+<input  type='hidden' class='author_fullname' value=''>
+
+<input  type='hidden' class='author_did_value' value=''>
+<input  type='hidden' class='myDid_did_value' value=''>
+
+
+
+<input  type='hidden' class='a_value' value=''>
+<input  type='hidden' class='r_value' value=''>
+
+
+<div  style='width:300px;' id='network_status'></div>
+<center><h3>Web5 Digital Arts</h3></center>
+<center style='font-size:20px'>Welcome: <span style='color:#800000;font-size:20px' class='myDid'></span>
+&nbsp;&nbsp;&nbsp;&nbsp;
+
+
+<button class="category_post1 copy_btn" id="copy_btn"   title="Copy DID">Copy DID</button>&nbsp;&nbsp;&nbsp;&nbsp;
+<button class="category_post1 download_btn" id="download_btn"  title="Download DID">Download DID</button>
+
+
+
+</center>
+<br>
+
+
+<center>
+<div class='loader_init_did'></div>
+<div class='result_init_did'></div>
+
+<div id="loader_init_did"></div>
+<div id="result_init_did"></div>
+
+
+
+<div id="loader_create_protocols"></div>
+<div id="result_create_protocols"></div>
+
+
+</center>
+
+
+
+
+
+<!-- profile  Modal start -->
+
+
+
+<div id="myModal_profile" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+
+    <div class="modal-content">
+
+      <!-- Modal Header -->
+      <div class="modal-header"  style='background:#800000;color:white;padding:10px;'>
+        <h4 class="modal-title">Update Your Profile Data</h4>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+      </div>
+
+      <!-- Modal body -->
+      <div class="modal-body">
+
+
+Easily Update Your Profile  Data<br><br>
+
+
+
+ <div class="form-group">
+              <label> Enter Fullname</label>
+              <input type="text" class="col-sm-12 form-control" id="fullname" name="fullname" placeholder="Enter Fullname" />
+            </div>
+<br>
+
+ <div class="form-group">
+              <label> Enter Phone No. (Start with + sign)</label>
+              <input type="text" class="col-sm-12 form-control" id="phone_no" name="phone_no" placeholder="Enter Phone No." />
+            </div>
+<br>
+
+ <div class="form-group">
+              <label> Enter Email. </label>
+              <input type="text" class="col-sm-12 form-control" id="email" name="email" placeholder="Enter Email." />
+            </div>
+<br>
+
+
+ <div class="form-group col-sm-12">
+			<div id="loader_update"></div>
+                        <div id="result_update"></div>
+                    </div>
+
+                    <input type="button" id="update_btn" class="pull-right btn btn-primary update_btn" value="Update" />
+
+
+      </div>
+<br><br>
+
+      <!-- Modal footer -->
+      <div class="modal-footer">
+        <button style='float:left' type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- profile Modal ends -->
+
+
+
+
+
+
+
+
+<!-- photos  Modal start -->
+
+
+
+<div id="myModal_photos" class="modal fade" role="dialog">
+  <div class="modal-dialog modal-lg">
+
+    <div class="modal-content">
+
+      <!-- Modal Header -->
+      <div class="modal-header"  style='background:#800000;color:white;padding:10px;'>
+        <h4 class="modal-title">Share Digital Arts Photos</h4>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+      </div>
+
+      <!-- Modal body -->
+      <div class="modal-body">
+
+<div class='well' style=''>
+<b style='color:#800000'>Downloadable Sample Photos for testing purposes. All this Photos are less than 15 kb</b><br>
+<ul>
+<li>
+<a href='artwork_photos_samples/artwork1.png' target='_blank'>Photo Sample 1</a><br>
+</li>
+
+<li>
+<a href='artwork_photos_samples/artwork2.png' target='_blank'>Photo Sample 2</a><br>
+</li>
+
+<li>
+<a href='artwork_photos_samples/artwork3.png' target='_blank'>Photo Sample 3</a><br>
+</li>
+
+<li>
+<a href='artwork_photos_samples/artwork4.png' target='_blank'>Photo Sample 4</a><br>
+</li>
+
+</ul>
+
+</div>
+
+
+ <div class="form-group">
+<label> Select Digital Photos</label>
+  <input type="file" class="file_content_photos photos_upload"  name="file_content_photos" id="photos_upload" />
+
+
+<div id='loader_photosx'></div>
+
+  </div>
+
+<input type="hidden"  class="col-sm-12 form-control file_uploads_photos" id="file_uploads_photos" name="file_uploads_photos" value=''/>
+
+<input type="hidden"  class="col-sm-12 form-control file_name_photos" id="file_name_photos" name="file_name_photos" value=''/>
+<input type="hidden"  class="col-sm-12 form-control file_type_photos" id="file_type_photos" name="file_type_photos" value=''/>
+
+
+
+ <div class="form-group">
+              <label> Enter Product Title</label>
+              <input type="text" class="col-sm-12 form-control" id="title" name="title" placeholder="Enter Product Title" />
+            </div>
+<br>
+
+ <div class="form-group">
+              <label> Enter Product Description</label>
+              <textarea class="col-sm-12 form-control" id="desc" name="desc" placeholder="Enter Product Description" ></textarea>
+            </div>
+<br>
+
+ <div class="form-group">
+              <label> Enter Price (USD) <span style='color:red;'>Enter Number ONLY</span></label>
+              <input type='text'  class="col-sm-12 form-control" id="price" name="price" placeholder="Enter Price (USD)" >
+            </div>
+<br>
+
+
+ <div class="form-group">
+              <label> Enter Paypal Email Address <span style='color:red'>(For Recieving Payments)</span></label>
+              <input type='text' class="author_email paypal_email col-sm-12 form-control" placeholder="Enter Price (USD)" value=''>
+            </div>
+<br>
+
+
+ <div class="form-group">
+              <label style='color:#800000'>Enter Recipient DID</label>
+              <input type="text" class="col-sm-12 form-control" id="recipient_did" name="recipient_did" placeholder="Eg. did:ion:EiCSd_cSGbqZp..." />
+            </div>
+<br>
+
+
+
+
+
+ <div class="form-group col-sm-12">
+<div id="loader_photos"></div>
+<div id="result_photos"></div>
+                    <input type="button"  class="pull-right btn btn-primary photos_btn" value="Share Digital Art Works" />
+</div>
+
+
+
+
+
+
+
+      </div>
+<br><br>
+
+
+
+      <!-- Modal footer -->
+      <div class="modal-footer">
+        <button style='float:left' type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Photos Modal ends -->
+
+
+
+
+
+
+
+
+
+<div class='row'>
+
+<div class='col-sm-3 well'>
+
+<button class="category_post1" data-toggle="modal" data-target="#myModal_profile" title="">&nbsp;&nbsp;&nbsp;&nbsp; Update Personal Profile</button><br>
+
+<div id="loader_rec"></div>
+<div id="result_rec"></div>
+<div id="data_result"></div>
+
+</div>
+
+
+
+
+
+
+<div class='col-sm-9 well'>
+ <center><b style='font-size:20px'>Uploaded Photo Album List</b> </center><br>
+
+<button class="category_post1" data-toggle="modal" data-target="#myModal_photos" title="">Share Digital Arts Contents</button><br>
+
+
+<center>
+<div id="loader_ph"></div>
+<div id="result_ph"></div>
+</center>
+
+
+<div id="data_result_photorecord"> </div>
+ 	
+				
+   
+
+
+</div>
+</div>
+
+
+
+
+
+
+
+</div>
+
+
+
+
+
+
+
+
+
+<!-- photo Comments Modal starts here-->
+
+<div class="containerx">
+  
+  <div class="modal fade" id="myModal_comment" role="dialog">
+    <div class="modal-dialog  modal-lg modal-appear-center1">
+    
+      <!-- Modal content-->
+      <div class="modal-content">
+        <div class="modal-header" style='color:black;background:#ddd;'>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+          <button type="button" class="pull-right btn btn-default modal_close_btn" data-dismiss="modal">Close</button>
+
+          <h4 class="modal-title">Photos Comments and Discussion System</h4>
+        </div>
+
+        <div class="modal-body">
+          <p>
+
+<h4 style='color:#800000'>Photo Title:  <span class="p_title"></span></h4>
+<b>Photo Description: </b> <span class="p_desc"></span><br>
+<b>Photo Filename: </b> <span class="p_file_name_docs"></span><br>
+<b>Price: </b> <span class="p_price"></span> (USD)<br>
+
+
+<b>Photo: </b> <span class="rec_arts" id="rec_arts"></span><br>
+
+
+<div class="loader_comment_fetch"></div>
+<div class="result_comment_fetch"></div>
+<div id="data_result_comment" class="comment_hide_on_modal_close"></div>
+
+
+  <div class="result_comment_add"></div>
+<div id="data_result_comment_new"></div>
+
+ <div class="form-group col-sm-12">
+<label> Enter Comment </label>
+<textarea id="" class="comment_msg col-sm-12 form-control" placeholder="Enter Comment"></textarea>
+      </div>
+
+ <div class="form-group col-sm-12">
+	       <div class="loader_comment_add"></div>
+             
+               <input type="button"  class="pull-right btn btn-primary comment_add_btn" value="Add Comment" />
+      </div>
+
+
+
+
+
+
+<br /><br />
+<br /><br />
+<br /><br />
+
+
+</p>
+        </div>
+
+<br /><br />
+
+        <div class="modal-footer" style='color:black;background:#ddd'>
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+  
+</div>
+
+
+<!-- photo Comments Modal end here-->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- photo Paypal Payments Modal starts here-->
+
+<div class="containerx">
+  
+  <div class="modal fade" id="myModal_paypal" role="dialog">
+    <div class="modal-dialog  modal-lg modal-appear-center1">
+    
+      <!-- Modal content-->
+      <div class="modal-content">
+        <div class="modal-header" style='color:black;background:#ddd;'>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+          <button type="button" class="pull-right btn btn-default modal_close_btn" data-dismiss="modal">Close</button>
+
+          <h4 class="modal-title">Photos Paypal Payment System</h4>
+        </div>
+
+        <div class="modal-body">
+          <p>
+
+<h4 style='color:#800000'>Photo Title:  <span class="p_title"></span></h4>
+<b>Photo Description: </b> <span class="p_desc"></span><br>
+<b>Photo Filename: </b> <span class="p_file_name_docs"></span><br>
+<b>Price: </b> <span class="p_price"></span> (USD)<br>
+
+<b>Photo : </b> <span class="rec_arts" id="rec_arts"></span><br><br>
+
+<form action="https://www.paypal.com/cgi-bin/webscr" method="post"> 
+<input type="hidden" name="business" class="p_paypal_email_value" value="">
+<input type="hidden" name="cmd" value="_xclick">
+<input type="hidden" name="item_name" class="p_item_value" value="">
+ <input type="hidden" name="amount" class="p_price_value" value=""> 
+<input type="hidden" name="currency_code" value="USD">
+
+<input type="image" name="submit" border="0" src="https://www.paypalobjects.com/en_US/i/btn/btn_buynow_LG.gif" alt="Buy Now">
+ <img alt="" border="0" width="1" height="1" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" > </form>
+
+
+
+
+
+
+<br /><br />
+<br /><br />
+<br /><br />
+
+
+</p>
+        </div>
+
+<br /><br />
+
+        <div class="modal-footer" style='color:black;background:#ddd'>
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+  
+</div>
+
+
+<!-- photo Paypal Payment Modal end here-->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</div>
+
+</body>
+</html>
